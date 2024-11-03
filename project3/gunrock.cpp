@@ -28,8 +28,12 @@ int BUFFER_SIZE = 1;
 string BASEDIR = "static";
 string SCHEDALG = "FIFO";
 string LOGFILE = "/dev/null";
+std::deque<MySocket*> buffer;
 
 vector<HttpService *> services;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t serviceAvailable = PTHREAD_COND_INITIALIZER;
+pthread_cond_t bufferNotFull = PTHREAD_COND_INITIALIZER;
 
 HttpService *find_service(HTTPRequest *request) {
    // find a service that is registered for this path prefix
@@ -104,6 +108,18 @@ void handle_request(MySocket *client) {
   delete client;
 }
 
+void* workerThreadHandler(void* arg){
+  while(true){
+    dthread_mutex_lock(lock);
+    while (buffer.size() <= 0){
+      dthread_cond_wait(serviceAvailable, lock);
+    }
+    mySocket* client = buffer.pop_front();
+    dthread_cond_signal(bufferNotFull);
+    dthread_mutext_unlock(lock);
+    handle_request(client);
+  }
+}
 int main(int argc, char *argv[]) {
 
   signal(SIGPIPE, SIG_IGN);
@@ -134,21 +150,31 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
+  for (int i = 0; i < THREAD_POOL_SIZE; i++){
+    pthread_t* threadId;
+    dthread_create(&threadId,NULL, workerThreadHandler, NULL);
+  }
 
   set_log_file(LOGFILE);
 
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
-  MySocket *client;
+  //MySocket *client;
 
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new FileService(BASEDIR));
   
   while(true) {
+    dthread_mutex_lock(lock);
+    while (buffer.size() >= BUFFER_SIZE){
+      dthread_cond_wait(bufferNotFull, lock);
+    }
     sync_print("waiting_to_accept", "");
-    client = server->accept();
+    buffer->push_back(server->accept());
     sync_print("client_accepted", "");
-    handle_request(client);
+    dthread_cond_signal(serviceAvailable);
+    dthread_mutex_unlock(lock);
+    //handle_request(client);
   }
 }
