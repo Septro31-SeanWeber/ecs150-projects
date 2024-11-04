@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
     client = server->accept();
     sync_print("client_accepted", "");
     dthread_mutex_lock(&lock);
-    while(buffer.size() >= BUFFER_SIZE){
+    while((int) buffer.size() >= BUFFER_SIZE){
       dthread_cond_wait(&bufferNotFull,&lock);
     }
     buffer.push_back(client);
