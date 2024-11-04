@@ -178,5 +178,4 @@ int main(int argc, char *argv[]) {
     dthread_mutex_unlock(&lock);
     //handle_request(client);
   }
-  
 }
