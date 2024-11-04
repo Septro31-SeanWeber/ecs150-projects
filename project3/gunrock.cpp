@@ -120,6 +120,7 @@ void* workerThreadHandler(void* arg){
     dthread_mutex_unlock(&lock);
     handle_request(client);
   }
+  return NULL;
 }
 int main(int argc, char *argv[]) {
 
@@ -160,15 +161,13 @@ int main(int argc, char *argv[]) {
 
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
-  MySocket *client;
 
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new FileService(BASEDIR));
-  
   while(true) {
     sync_print("waiting_to_accept", "");
-    client = server->accept();
+    MySocket* client = server->accept();
     dthread_mutex_lock(&lock);
     while ((int) buffer.size() >= BUFFER_SIZE){
       dthread_cond_wait(&bufferNotFull, &lock);
@@ -179,4 +178,5 @@ int main(int argc, char *argv[]) {
     dthread_mutex_unlock(&lock);
     //handle_request(client);
   }
+  
 }
