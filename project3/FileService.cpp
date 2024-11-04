@@ -12,6 +12,10 @@
 using namespace std;
 
 FileService::FileService(string basedir) : HttpService("/") {
+  if (basedir.find("..") != string::npos){
+    cout << "invalid basedir" << endl;
+    exit(1);
+  }
   while (endswith(basedir, "/")) {
     basedir = basedir.substr(0, basedir.length() - 1);
   }
