@@ -168,12 +168,12 @@ int main(int argc, char *argv[]) {
   while(true) {
     sync_print("waiting_to_accept", "");
     MySocket* client = server->accept();
+    sync_print("client_accepted", "");
     dthread_mutex_lock(&lock);
     while ((int) buffer.size() >= BUFFER_SIZE){
       dthread_cond_wait(&bufferNotFull, &lock);
     }
     buffer.push_back(client);
-    sync_print("client_accepted", "");
     dthread_cond_signal(&serviceAvailable);
     dthread_mutex_unlock(&lock);
     //handle_request(client);
