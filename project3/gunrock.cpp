@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
   MySocket *client;
-  for (int i = 0; i < BUFFER_SIZE; i++){
+  for (int i = 0; i < THREAD_POOL_SIZE; i++){
     pthread_t threadId;
     dthread_create(&threadId,NULL, workerThreadHandler, NULL);
   }
