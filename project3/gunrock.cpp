@@ -160,19 +160,19 @@ int main(int argc, char *argv[]) {
 
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
-  //MySocket *client;
+  MySocket *client;
 
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new FileService(BASEDIR));
   
   while(true) {
-    MySocket *client = server->accept();
+    sync_print("waiting_to_accept", "");
+    client = server->accept();
     dthread_mutex_lock(&lock);
     while ((int) buffer.size() >= BUFFER_SIZE){
       dthread_cond_wait(&bufferNotFull, &lock);
     }
-    sync_print("waiting_to_accept", "");
     buffer.push_back(client);
     sync_print("client_accepted", "");
     dthread_cond_signal(&serviceAvailable);
