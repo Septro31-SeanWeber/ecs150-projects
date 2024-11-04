@@ -28,7 +28,11 @@ int BUFFER_SIZE = 1;
 string BASEDIR = "static";
 string SCHEDALG = "FIFO";
 string LOGFILE = "/dev/null";
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t serviceAvailable = PTHREAD_COND_INITIALIZER;
+pthread_cond_t bufferNotFull = PTHREAD_COND_INITIALIZER;
 
+deque<MySocket*> buffer;
 vector<HttpService *> services;
 
 HttpService *find_service(HTTPRequest *request) {
@@ -103,7 +107,20 @@ void handle_request(MySocket *client) {
   client->close();
   delete client;
 }
-
+void* workerThreadHandler(void* arg){
+  while(true){
+    dthread_mutex_lock(&lock);
+    while ((int) buffer.size() <= 0){
+      dthread_cond_wait(&serviceAvailable, &lock);
+    }
+    MySocket* client = buffer.front();
+    buffer.pop_front();
+    dthread_cond_signal(&bufferNotFull);
+    dthread_mutex_unlock(&lock);
+    handle_request(client);
+  }
+  return NULL;
+}
 int main(int argc, char *argv[]) {
 
   signal(SIGPIPE, SIG_IGN);
@@ -140,7 +157,10 @@ int main(int argc, char *argv[]) {
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
   MySocket *client;
-
+  for (int i = 0; i < 1; i++){
+    pthread_t threadId;
+    dthread_create(&threadId,NULL, workerThreadHandler, NULL);
+  }
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new FileService(BASEDIR));
@@ -149,6 +169,13 @@ int main(int argc, char *argv[]) {
     sync_print("waiting_to_accept", "");
     client = server->accept();
     sync_print("client_accepted", "");
-    handle_request(client);
+    dthread_mutex_lock(&lock);
+    while(buffer.size() >= BUFFER_SIZE){
+      dthread_cond_wait(&bufferNotFull,&lock);
+    }
+    buffer.push_back(client);
+    dthread_cond_signal(&serviceAvailable);
+    dthread_mutex_unlock(&lock);
+    //handle_request(client);
   }
 }
