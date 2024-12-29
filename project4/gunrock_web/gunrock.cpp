@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new DistributedFileSystemService(DISKFILE));
-  services.push_back(new FileService(BASEDIR));
+  services.push_back(new FileService());
   
   while(true) {
     sync_print("waiting_to_accept", "");
