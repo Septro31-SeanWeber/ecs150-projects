@@ -12,16 +12,15 @@
 
 using namespace std;
 
-FileService::FileService() : HttpService("/") {
-  // while (endswith(basedir, "/")) {
-  //   basedir = basedir.substr(0, basedir.length() - 1);
-  // }
+FileService::FileService(std::string basedir) : HttpService("/") {
+  while (endswith(basedir, "/")) {
+    basedir = basedir.substr(0, basedir.length() - 1);
+  }
 
-  // if (basedir.length() == 0) {
-  //   cout << "invalid basedir" << endl;
-  //   exit(1);
-  // }
-  this->m_basedir = "static";
+  if (basedir.length() == 0) {
+    cout << "invalid basedir" << endl;
+    exit(1);
+  }
 }
 
 bool FileService::endswith(string str, string suffix) {

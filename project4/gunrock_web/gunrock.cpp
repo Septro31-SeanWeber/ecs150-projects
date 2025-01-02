@@ -26,7 +26,7 @@ using namespace std;
 int PORT = 8080;
 int THREAD_POOL_SIZE = 1;
 int BUFFER_SIZE = 1;
-string BASEDIR = "ds3";
+string BASEDIR = "static";
 string SCHEDALG = "FIFO";
 string LOGFILE = "/dev/null";
 string DISKFILE = "disk.img";
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new DistributedFileSystemService(DISKFILE));
-  services.push_back(new FileService());
+  services.push_back(new FileService("static"));
   
   while(true) {
     sync_print("waiting_to_accept", "");
