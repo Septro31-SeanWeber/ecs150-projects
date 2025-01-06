@@ -21,6 +21,7 @@ FileService::FileService(std::string basedir) : HttpService("/") {
     cout << "invalid basedir" << endl;
     exit(1);
   }
+  this->m_basedir = basedir;
 }
 
 bool FileService::endswith(string str, string suffix) {
