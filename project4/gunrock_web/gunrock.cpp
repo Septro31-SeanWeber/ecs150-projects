@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 
   set_log_file(LOGFILE);
 
-  cout << "Lisening on port " << PORT << endl;
+  cout << "Listening on port " << PORT << endl;
   
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
